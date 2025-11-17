@@ -60,6 +60,9 @@ end)
 
 RegisterNetEvent('apartments:server:openStash', function(CurrentApartment)
     local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    if not Player.PlayerData.metadata["inside"] then return end
     exports['qb-inventory']:OpenInventory(src, CurrentApartment)
 end)
 
@@ -206,18 +209,14 @@ end)
 QBCore.Functions.CreateCallback('apartments:IsOwner', function(source, cb, apartment)
     local src = source
     local Player = QBCore.Functions.GetPlayer(src)
-    if Player ~= nil then
-        local result = MySQL.query.await('SELECT * FROM apartments WHERE citizenid = ?', { Player.PlayerData.citizenid })
-        if result[1] ~= nil then
-            if result[1].type == apartment then
-                cb(true)
-            else
-                cb(false)
-            end
-        else
-            cb(false)
-        end
+    if not Player then
+        return cb(false)
     end
+    local result = MySQL.query.await('SELECT * FROM apartments WHERE citizenid = ?', {Player.PlayerData.citizenid })
+    if result and result[1] then
+        return cb(result[1].type)
+    end
+    return cb(false)
 end)
 
 
