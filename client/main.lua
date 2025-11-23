@@ -1,4 +1,3 @@
-local QBCore = exports['qb-core']:GetCoreObject()
 local UseTarget = GetConvar('UseTarget', 'false') == 'true'
 local InApartment = false
 local ClosestHouse = nil
@@ -50,15 +49,8 @@ local function RegisterInApartmentTarget(targetKey, coords, heading, options)
     InApartmentTargets[targetKey].created = true
 end
 
-local function loadAnimDict(dict)
-    while (not HasAnimDictLoaded(dict)) do
-        RequestAnimDict(dict)
-        Wait(5)
-    end
-end
-
 local function openHouseAnim()
-    loadAnimDict('anim@heists@keycard@')
+    exports['qb-core']:RequestAnimDict('anim@heists@keycard@')
     TaskPlayAnim(PlayerPedId(), 'anim@heists@keycard@', 'exit', 5.0, 1.0, -1, 16, 0, 0, 0, 0)
     Wait(400)
     ClearPedTasks(PlayerPedId())
@@ -173,9 +165,9 @@ local function EnterApartment(house, apartmentId, new)
     TriggerServerEvent('InteractSound_SV:PlayOnSource', 'houses_door_open', 0.1)
     openHouseAnim()
     Wait(250)
-    QBCore.Functions.TriggerCallback('apartments:GetApartmentOffset', function(offset)
+    exports['qb-core']:TriggerCallback('apartments:GetApartmentOffset', function(offset)
         if offset == nil or offset == 0 then
-            QBCore.Functions.TriggerCallback('apartments:GetApartmentOffsetNewOffset', function(newoffset)
+            exports['qb-core']:TriggerCallback('apartments:GetApartmentOffsetNewOffset', function(newoffset)
                 if newoffset > 230 then
                     newoffset = 210
                 end
@@ -236,9 +228,9 @@ end
 
 
 function MenuOwners()
-    QBCore.Functions.TriggerCallback('apartments:GetAvailableApartments', function(apartments)
+    exports['qb-core']:TriggerCallback('apartments:GetAvailableApartments', function(apartments)
         if next(apartments) == nil then
-            QBCore.Functions.Notify(Lang:t('error.nobody_home'), 'error', 3500)
+            exports['qb-core']:Notify(Lang:t('error.nobody_home'), 'error', 3500)
             CloseMenuFull()
         else
             local apartmentMenu = {
@@ -315,7 +307,7 @@ RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
 end)
 
 RegisterNetEvent('apartments:client:setupSpawnUI', function(cData)
-    QBCore.Functions.TriggerCallback('apartments:GetOwnedApartment', function(result)
+    exports['qb-core']:TriggerCallback('apartments:GetOwnedApartment', function(result)
         if result then
             TriggerEvent('qb-spawn:client:setupSpawns', cData, false, nil)
             TriggerEvent('qb-spawn:client:openUI', true)
@@ -338,7 +330,7 @@ RegisterNetEvent('apartments:client:SpawnInApartment', function(apartmentId, apa
     if RangDoorbell ~= nil then
         local doorbelldist = #(pos - vector3(Apartments.Locations[RangDoorbell].coords.enter.x, Apartments.Locations[RangDoorbell].coords.enter.y, Apartments.Locations[RangDoorbell].coords.enter.z))
         if doorbelldist > 5 then
-            QBCore.Functions.Notify(Lang:t('error.to_far_from_door'))
+            exports['qb-core']:Notify(Lang:t('error.to_far_from_door'))
             return
         end
     end
@@ -384,7 +376,7 @@ end)
 RegisterNetEvent('apartments:client:RingDoor', function(player, _)
     CurrentDoorBell = player
     TriggerServerEvent('InteractSound_SV:PlayOnSource', 'doorbell', 0.1)
-    QBCore.Functions.Notify(Lang:t('info.at_the_door'))
+    exports['qb-core']:Notify(Lang:t('info.at_the_door'))
 end)
 
 RegisterNetEvent('apartments:client:DoorbellMenu', function()
@@ -392,7 +384,7 @@ RegisterNetEvent('apartments:client:DoorbellMenu', function()
 end)
 
 RegisterNetEvent('apartments:client:EnterApartment', function()
-    QBCore.Functions.TriggerCallback('apartments:GetOwnedApartment', function(result)
+    exports['qb-core']:TriggerCallback('apartments:GetOwnedApartment', function(result)
         if result ~= nil then
             EnterApartment(ClosestHouse, result.name)
         end
@@ -402,7 +394,7 @@ end)
 RegisterNetEvent('apartments:client:UpdateApartment', function()
     local apartmentType = ClosestHouse
     local apartmentLabel = Apartments.Locations[ClosestHouse].label
-    local result = QBCore.Functions.TriggerCallback('apartments:GetOwnedApartment')
+    local result = exports['qb-core']:TriggerCallback('apartments:GetOwnedApartment')
     if not result then
         TriggerServerEvent("apartments:server:CreateApartment", apartmentType, apartmentLabel, false)
         IsOwned = ClosestHouse
@@ -415,7 +407,7 @@ end)
 
 RegisterNetEvent('apartments:client:OpenDoor', function()
     if CurrentDoorBell == 0 then
-        QBCore.Functions.Notify(Lang:t('error.nobody_at_door'))
+        exports['qb-core']:Notify(Lang:t('error.nobody_at_door'))
         return
     end
     TriggerServerEvent('apartments:server:OpenDoor', CurrentDoorBell, CurrentApartment, ClosestHouse)
@@ -434,11 +426,11 @@ RegisterNetEvent('apartments:client:OpenStash', function()
 end)
 
 local function init()
-    IsOwned = QBCore.Functions.TriggerCallback('apartments:IsOwner')
+    IsOwned = exports['qb-core']:TriggerCallback('apartments:IsOwner')
     if not IsOwned then
         repeat
             Wait(2000)
-            IsOwned = QBCore.Functions.TriggerCallback('apartments:IsOwner')
+            IsOwned = exports['qb-core']:TriggerCallback('apartments:IsOwner')
         until IsOwned
     end
     createHomeBlip(IsOwned)
